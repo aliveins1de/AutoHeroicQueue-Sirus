@@ -7,7 +7,7 @@ AutoHeroicQueueDB = AutoHeroicQueueDB or {}
 local AHQ = CreateFrame("Frame")
 AHQ:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-local DEBUG = true
+local DEBUG = false
 
 local function Debug(msg)
     if DEBUG then
