@@ -16,3 +16,4 @@ SavedVariables/
 *.zip
 *.rar
 *.7z
+build-release.bat

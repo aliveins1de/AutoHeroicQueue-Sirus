@@ -1,29 +1,53 @@
-name: Release
-
+name: Auto Release
 on:
   push:
-    tags:
-      - v*
-
-permissions:
-  contents: write
-
+    branches:
+      - main
+    paths:
+      - 'AutoHeroicQueue.toc'
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Build addon zip
+      - name: Extract Version
+        id: get_version
         run: |
-          mkdir -p build/AutoHeroicQueue
-          cp AutoHeroicQueue.toc AutoHeroicQueue.lua build/AutoHeroicQueue/
-          cd build
-          zip -r ../AutoHeroicQueue.zip AutoHeroicQueue
-
-      - name: Create GitHub release
+          VERSION=$(grep -i "^## Version:" AutoHeroicQueue.toc | sed 's/.*: *//' | tr -d '\r' | xargs | sed 's/^[vV]//')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Found version: $VERSION"
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git ls-remote --tags origin | grep -q "refs/tags/v${{ env.VERSION }}$"; then
+            echo "Tag v${{ env.VERSION }} already exists."
+            echo "EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "Tag v${{ env.VERSION }} does not exist."
+            echo "EXISTS=false" >> $GITHUB_ENV
+          fi
+      - name: Create Archive
+        if: env.EXISTS == 'false'
+        run: |
+          mkdir -p release/AutoHeroicQueue
+          git archive HEAD | tar -x -C release/AutoHeroicQueue
+          rm -rf release/AutoHeroicQueue/.github
+          cd release
+          zip -r ../AutoHeroicQueue-v${{ env.VERSION }}.zip AutoHeroicQueue
+          # Создаем копию со статичным именем для постоянной ссылки
+          cp ../AutoHeroicQueue-v${{ env.VERSION }}.zip ../AutoHeroicQueue-latest.zip
+          cd ..
+      - name: Create Release
+        if: env.EXISTS == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          files: AutoHeroicQueue.zip
+          tag_name: "v${{ env.VERSION }}"
+          name: "Release v${{ env.VERSION }}"
+          files: |
+            AutoHeroicQueue-v${{ env.VERSION }}.zip
+            AutoHeroicQueue-latest.zip
           generate_release_notes: true
