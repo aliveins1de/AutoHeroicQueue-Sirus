@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: AutoHeroicQueue
+## Notes: Авто-выбор героик подземелий в LFD при полной группе 5/5 (лидер)
+## Author: You
+## Version: 1.0
+## SavedVariables: AutoHeroicQueueDB
+AutoHeroicQueue.lua
